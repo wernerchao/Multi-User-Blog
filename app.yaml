@@ -4,4 +4,8 @@ threadsafe: true
 
 handlers:
 - url: /.*
-  script: form.app
+  script: templates.app
+
+libraries:
+- name: jinja2
+  version: latest
