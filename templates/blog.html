@@ -1,11 +1,13 @@
-<h1>
-    Testing Blog
-</h1>
+{% extends "base.html" %}
+
+{% block content %}
+<h2>
+    Blog
+</h2>
 {% for post in posts %}
     <div>
-        {{ post.title }}
-    </div>
-    <div>
-        {{ post.content }}
+        {{ post.render() | safe }}
     </div>
 {% endfor %}
+
+{% endblock %}

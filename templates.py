@@ -16,8 +16,7 @@ class Handler(webapp2.RequestHandler):
 
     def render_str(self, template, **kw):
         # t = jinja_env.get_template(template), kind of unnecessary
-        # return t.render(**kw) # kind of unnecessary
-        # return a string
+        # return t.render(**kw) # kind of unnecessary # return a string
         return jinja_env.get_template(template).render(**kw)
 
     def render(self, template, **kw):
@@ -109,16 +108,30 @@ class WelcomeHandler(Handler):
 
 #Blog stuff starts here
 
-class DBPost(db.Model):
+def render_str(template, **params):
+    t = jinja_env.get_template(template)
+    return t.render(params)
+
+class Post(db.Model):
     title = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     last_modified = db.DateTimeProperty(auto_now = True)
 
+    def render(self):
+        self._render_text = self.content.replace('\n', '<br>')
+        return render_str("post.html", post = self)
+
 class BlogHandler(Handler):
     def get(self):
-        posts = db.GqlQuery("select * from DBPost")
+        posts = db.GqlQuery("select * from Post order by created desc limit 10 ")
         self.render("blog.html", posts = posts)
+
+class PostPageHandler(Handler):
+    def get(self, post_id):
+        key = db.Key.from_path('Post', int(post_id))
+        post = db.get(key)
+        self.render("post_page.html", post = post)
 
 class NewPostHandler(Handler):
     def get(self):
@@ -129,9 +142,9 @@ class NewPostHandler(Handler):
         content = self.request.get("content")
 
         if title and content:
-            p = DBPost(title = title, content = content)
+            p = Post(title = title, content = content)
             p.put()
-            self.response.out.write("Thanks!")
+            self.redirect('/blog/%s' % str(p.key().id()))
         else:
             error = "We need both title and content"
             self.render("newpost.html", title = title, content = content, error = error)
@@ -142,6 +155,7 @@ app = webapp2.WSGIApplication([
                                 ('/ROT13', ROT13Handler),
                                 ('/signup', SignUpHandler),
                                 ('/welcome', WelcomeHandler),
-                                ('/blog', BlogHandler),
-                                ('/newpost', NewPostHandler)
+                                ('/blog/?', BlogHandler),
+                                ('/blog/([0-9]+)', PostPageHandler),
+                                ('/blog/newpost', NewPostHandler)
                                 ], debug=True)

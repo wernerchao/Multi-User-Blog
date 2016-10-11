@@ -1,6 +1,9 @@
-<h1>
-    New Post Test
-</h1>
+{% extends "base.html" %}
+
+{% block content %}
+<h2>
+    New Post
+</h2>
 <form method="post">
     <label>
         <div>Blog Title</div>
@@ -23,3 +26,4 @@
 <div style="color: red">
     {{ error }}
 <div>
+{% endblock %}
