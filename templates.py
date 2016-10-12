@@ -2,8 +2,11 @@ import os
 import jinja2
 import webapp2
 import re
+import hmac
 
 from google.appengine.ext import db
+
+SECRET = 'iamsosecret'
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
@@ -23,10 +26,38 @@ class Handler(webapp2.RequestHandler):
         self.response.out.write(self.render_str(template, **kw))
         # call the write function, and pass in render_str results as argument
 
+def hash_str(s):
+    return hmac.new(SECRET, s).hexdigest()
+
+def make_secure_val(s):
+    return "%s|%s" % (s, hash_str(s))
+
+def check_secure_val(h):
+    temp = h.split("|")
+    if hash_str(temp[0]) == temp[1]:
+        return temp[0]
+    else:
+        None
+
 class MainPage(Handler):
     def get(self):
-        items = self.request.get_all("food") #get food query parameter from the url
-        self.render("shopping_list.html", items = items)
+        self.response.headers['Content-Type'] = 'text/plain'
+        visits = 0
+        visit_cookie_val = self.request.cookies.get('visits')
+        if visit_cookie_val:
+            cookie_val = check_secure_val(visit_cookie_val) #if check failed, returns None
+            if cookie_val:
+                visits = int(cookie_val) #if above check failed, visits = int(None), which is 0
+
+        visits += 1
+
+        new_cookie_val = make_secure_val(str(visits))
+
+        self.response.headers.add_header('Set-Cookie', 'visits = %s' % new_cookie_val)
+        self.response.out.write("You've been here %s times" % visits)
+
+        # items = self.request.get_all("food") #get food query parameter from the url
+        # self.render("shopping_list.html", items = items)
 
 class FizzBuzzHandler(Handler):
     def get(self):
