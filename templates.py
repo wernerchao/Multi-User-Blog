@@ -90,6 +90,9 @@ USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 PASSWORD_RE = re.compile(r"^.{3,20}$")
 EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
 
+### Signup and welcome page here
+
+# Handle the signup page
 class SignUpHandler(Handler):
     def valid_username(self, username):
         return username and USER_RE.match(username)
@@ -132,17 +135,19 @@ class SignUpHandler(Handler):
         else:
             self.redirect("/welcome?username=" + username)
 
+# After the user signs up, will be redirected to a welcome page with his name displayed.
 class WelcomeHandler(Handler):
     def get(self):
         username = self.request.get("username")
         self.render("welcome.html", username = username)
 
-#Blog stuff starts here
+### Blog stuff starts here
 
 def render_str(template, **params):
     t = jinja_env.get_template(template)
     return t.render(params)
 
+# Handles how each post is displayed
 class Post(db.Model):
     title = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
@@ -151,19 +156,22 @@ class Post(db.Model):
 
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
-        return render_str("post.html", post = self)
+        return render_str("post.html", p = self)
 
+# Handles the home page of the blog
 class BlogHandler(Handler):
     def get(self):
         posts = db.GqlQuery("select * from Post order by created desc limit 10 ")
         self.render("blog.html", posts = posts)
 
+# Handles the new single post the user just submitted
 class PostPageHandler(Handler):
     def get(self, post_id):
         key = db.Key.from_path('Post', int(post_id))
         post = db.get(key)
         self.render("post_page.html", post = post)
 
+# Handles the form to take in new inputs
 class NewPostHandler(Handler):
     def get(self):
         self.render("newpost.html")

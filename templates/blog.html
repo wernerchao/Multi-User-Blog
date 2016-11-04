@@ -5,9 +5,9 @@
     Blog
 </h2>
 {% for post in posts %}
-    <div>
+    <p>
         {{ post.render() | safe }}
-    </div>
+    </p>
 {% endfor %}
 
 {% endblock %}
