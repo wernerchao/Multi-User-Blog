@@ -3,6 +3,9 @@ import jinja2
 import webapp2
 import re
 import hmac
+import hashlib
+import random
+from string import letters
 
 from google.appengine.ext import db
 
@@ -33,10 +36,11 @@ def check_secure_val(h):
     else:
         None
 
+# Main handler of all things, used this as parent for other classes to extend
 class Handler(webapp2.RequestHandler):
     # def write(self, *a, **kw):
     #     self.response.out.write(*a, **kw)
-    #kind of unnecessary to use this helper function
+    # Kind of unnecessary to use this helper function
 
     def render_str(self, template, **kw):
         # t = jinja_env.get_template(template), kind of unnecessary
@@ -45,7 +49,73 @@ class Handler(webapp2.RequestHandler):
 
     def render(self, template, **kw):
         self.response.out.write(self.render_str(template, **kw))
-        # call the write function, and pass in render_str results as argument
+        # Call the write function, and pass in render_str results as argument
+
+    def set_secure_cookie(self, name, val):
+        cookie_val = make_secure_val(val)
+        self.response.headers.add_header(
+            'Set-Cookie',
+            '%s=%s; Path=/' % (name, cookie_val))
+
+    def read_secure_cookie(self, name):
+        cookie_val = self.request.cookies.get(name)
+        return cookie_val and check_secure_val(cookie_val)
+
+    def login(self, user):
+        self.set_secure_cookie('user_id', str(user.key().id()))
+
+    def logout(self):
+        self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
+
+    def initialize(self, *a, **kw):
+        webapp2.RequestHandler.initialize(self, *a, **kw)
+        uid = self.read_secure_cookie('user_id')
+        self.user = uid and User.by_id(int(uid))
+
+##### User stuff
+def make_salt(length = 5):
+    return ''.join(random.choice(letters) for x in xrange(length))
+
+def make_pw_hash(name, pw, salt = None):
+    if not salt:
+        salt = make_salt()
+    h = hashlib.sha256(name + pw + salt).hexdigest()
+    return '%s,%s' % (salt, h)
+
+def valid_pw(name, password, h):
+    salt = h.split(',')[0]
+    return h == make_pw_hash(name, password, salt)
+
+def users_key(group = 'default'):
+    return db.Key.from_path('users', group)
+
+class User(db.Model):
+    name = db.StringProperty(required = True)
+    pw_hash = db.StringProperty(required = True)
+    email = db.StringProperty()
+
+    @classmethod
+    def by_id(cls, uid):
+        return User.get_by_id(uid, parent = users_key())
+
+    @classmethod
+    def by_name(cls, name):
+        u = User.all().filter('name =', name).get()
+        return u
+
+    @classmethod
+    def register(cls, name, pw, email = None):
+        pw_hash = make_pw_hash(name, pw)
+        return User(parent = users_key(),
+                    name = name,
+                    pw_hash = pw_hash,
+                    email = email)
+
+    @classmethod
+    def login(cls, name, pw):
+        u = cls.by_name(name)
+        if u and valid_pw(name, pw, u.pw_hash):
+            return u
 
 class MainPage(Handler):
     def get(self):
@@ -63,9 +133,6 @@ class MainPage(Handler):
 
         self.response.headers.add_header('Set-Cookie', 'visits = %s' % new_cookie_val)
         self.response.out.write("You've been here %s times" % visits)
-
-        # items = self.request.get_all("food") #get food query parameter from the url
-        # self.render("shopping_list.html", items = items)
 
 class FizzBuzzHandler(Handler):
     def get(self):
@@ -94,6 +161,7 @@ class ROT13Handler(Handler):
                 temp += char
         self.render('ROT13.html', content = temp)
 
+# Some simple validation methods to check username, password, and email.
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 PASSWORD_RE = re.compile(r"^.{3,20}$")
 EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
@@ -116,53 +184,66 @@ class SignUpHandler(Handler):
 
     def post(self):
         have_error = False
-        username = self.request.get("username")
-        password = self.request.get("password")
-        verifyPassword = self.request.get("verifyPassword")
-        email = self.request.get("email")
+        self.username = self.request.get("username")
+        self.password = self.request.get("password")
+        self.verifyPassword = self.request.get("verifyPassword")
+        self.email = self.request.get("email")
 
-        params = dict(username = username, email = email)
+        params = dict(username = self.username, email = self.email)
 
-        if not (self.valid_username(username)):
+        if not (self.valid_username(self.username)):
             params['error_username'] = "Not valid username"
             have_error = True
 
-        if not (self.valid_password(password)):
+        if not (self.valid_password(self.password)):
             params['error_password'] = "Not valid password"
             have_error = True
-        elif password != verifyPassword:
+        elif self.password != self.verifyPassword:
              params['error_verify'] = "Passwords didn't match.'"
              have_error = True
         
-        if not (self.valid_email(email)):
+        if not (self.valid_email(self.email)):
             params['error_email'] = "Not valid email"
             have_error = True
 
         if have_error:
             self.render('signup.html', **params)
         else:
-            self.redirect("/welcome?username=" + username)
+            # self.redirect("/welcome?username=" + username)
+            # Original code above, may be deleted later.
+            self.done()
+
+    def done(self, *a, **kw):
+        self.redirect("/welcome")
 
 # Check if the user already exists or not
-class Register(Signup):
+class Register(SignUpHandler):
     def done(self):
         # Make sure the user doesn't already exist
         u = User.by_name(self.username)
         if u:
             msg = 'That user already exists.'
-            self.render('signup-form.html', error_username = msg)
+            self.render('signup.html', error_username = msg)
         else:
             u = User.register(self.username, self.password, self.email)
             u.put()
 
+            # This login function actually just sets the cookie.
             self.login(u)
-            self.redirect('/blog')
+            self.redirect("/welcome")
 
 # After the user signs up, will be redirected to a welcome page with his name displayed.
 class WelcomeHandler(Handler):
+    # def get(self):
+    #     username = self.request.get("username")
+    #     self.render("welcome.html", username = username)
+    # Some original codes, may be deleted after new code below confirmed working
+
     def get(self):
-        username = self.request.get("username")
-        self.render("welcome.html", username = username)
+        if self.user:
+            self.render('welcome.html', username = self.user.name)
+        else:
+            self.redirect('/signup')
 
 ### Blog stuff starts here
 
@@ -211,7 +292,7 @@ app = webapp2.WSGIApplication([
                                 ('/', MainPage), 
                                 ('/fizzbuzz', FizzBuzzHandler),
                                 ('/ROT13', ROT13Handler),
-                                ('/signup', SignUpHandler),
+                                ('/signup', Register),
                                 ('/welcome', WelcomeHandler),
                                 ('/blog/?', BlogHandler),
                                 ('/blog/([0-9]+)', PostPageHandler),
