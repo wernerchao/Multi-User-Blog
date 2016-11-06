@@ -209,14 +209,12 @@ class SignUpHandler(Handler):
         if have_error:
             self.render('signup.html', **params)
         else:
-            # self.redirect("/welcome?username=" + username)
-            # Original code above, may be deleted later.
             self.done()
 
     def done(self, *a, **kw):
-        self.redirect("/welcome")
+        raise NotImplementedError
 
-# Check if the user already exists or not
+# Check if the user already exists or not when registering. Extends the SignUpHandler class.
 class Register(SignUpHandler):
     def done(self):
         # Make sure the user doesn't already exist
@@ -234,11 +232,6 @@ class Register(SignUpHandler):
 
 # After the user signs up, will be redirected to a welcome page with his name displayed.
 class WelcomeHandler(Handler):
-    # def get(self):
-    #     username = self.request.get("username")
-    #     self.render("welcome.html", username = username)
-    # Some original codes, may be deleted after new code below confirmed working
-
     def get(self):
         if self.user:
             self.render('welcome.html', username = self.user.name)
