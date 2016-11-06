@@ -135,6 +135,21 @@ class SignUpHandler(Handler):
         else:
             self.redirect("/welcome?username=" + username)
 
+# Check if the user already exists or not
+class Register(Signup):
+    def done(self):
+        # Make sure the user doesn't already exist
+        u = User.by_name(self.username)
+        if u:
+            msg = 'That user already exists.'
+            self.render('signup-form.html', error_username = msg)
+        else:
+            u = User.register(self.username, self.password, self.email)
+            u.put()
+
+            self.login(u)
+            self.redirect('/blog')
+
 # After the user signs up, will be redirected to a welcome page with his name displayed.
 class WelcomeHandler(Handler):
     def get(self):
