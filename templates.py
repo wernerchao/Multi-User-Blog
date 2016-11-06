@@ -12,6 +12,27 @@ template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                                 autoescape = True)
 
+secret = 'wernerhelloch@ou$ingthisasmysecrethahaha'
+
+# A normal out print with jinja
+def render_str(template, **params):
+    t = jinja_env.get_template(template)
+    return t.render(params)
+
+# Doing some hashing using hmac to hash the input value
+def hash_str(s):
+    return hmac.new(SECRET, s).hexdigest()
+
+def make_secure_val(s):
+    return "%s|%s" % (s, hash_str(s))
+
+def check_secure_val(h):
+    temp = h.split("|")
+    if hash_str(temp[0]) == temp[1]:
+        return temp[0]
+    else:
+        None
+
 class Handler(webapp2.RequestHandler):
     # def write(self, *a, **kw):
     #     self.response.out.write(*a, **kw)
@@ -25,19 +46,6 @@ class Handler(webapp2.RequestHandler):
     def render(self, template, **kw):
         self.response.out.write(self.render_str(template, **kw))
         # call the write function, and pass in render_str results as argument
-
-def hash_str(s):
-    return hmac.new(SECRET, s).hexdigest()
-
-def make_secure_val(s):
-    return "%s|%s" % (s, hash_str(s))
-
-def check_secure_val(h):
-    temp = h.split("|")
-    if hash_str(temp[0]) == temp[1]:
-        return temp[0]
-    else:
-        None
 
 class MainPage(Handler):
     def get(self):
@@ -157,10 +165,6 @@ class WelcomeHandler(Handler):
         self.render("welcome.html", username = username)
 
 ### Blog stuff starts here
-
-def render_str(template, **params):
-    t = jinja_env.get_template(template)
-    return t.render(params)
 
 # Handles how each post is displayed
 class Post(db.Model):
