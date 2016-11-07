@@ -9,13 +9,11 @@ from string import letters
 
 from google.appengine.ext import db
 
-SECRET = 'iamsosecret'
+SECRET = 'wernerhelloch@ou$ingthisasmysecrethahaha'
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                                 autoescape = True)
-
-secret = 'wernerhelloch@ou$ingthisasmysecrethahaha'
 
 # A normal out print with jinja
 def render_str(template, **params):
@@ -238,6 +236,27 @@ class WelcomeHandler(Handler):
         else:
             self.redirect('/signup')
 
+class LoginHandler(Handler):
+    def get(self):
+        self.render('login-form.html')
+
+    def post(self):
+        username = self.request.get('username')
+        password = self.request.get('password')
+
+        u = User.login(username, password)
+        if u:
+            self.login(u)
+            self.redirect('/welcome')
+        else:
+            msg = 'Invalid login'
+            self.render('login-form.html', error = msg)
+
+class LogoutHandler(Handler):
+    def get(self):
+        self.logout()
+        self.redirect('/signup')
+
 ### Blog stuff starts here
 
 # Handles how each post is displayed
@@ -287,6 +306,8 @@ app = webapp2.WSGIApplication([
                                 ('/ROT13', ROT13Handler),
                                 ('/signup', Register),
                                 ('/welcome', WelcomeHandler),
+                                ('/login', LoginHandler),
+                                ('/logout', LogoutHandler),
                                 ('/blog/?', BlogHandler),
                                 ('/blog/([0-9]+)', PostPageHandler),
                                 ('/blog/newpost', NewPostHandler)
