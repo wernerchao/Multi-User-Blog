@@ -8,6 +8,15 @@
         <h1 style="background-color: #ddd; color: #888; margin: 0; height: 50px">
             <a href="/blog">Blog</a>
         </h1>
+          <div class="login-area">
+            {% if user %}
+                {{user.name}} (<a class="login-link" href="/logout">logout</a>)
+            {% else %}
+            <a class="login-link" href="/login">login</a>
+            |
+            <a class="login-link" href="/signup">signup</a>
+            {% endif %}
+        </div>
         {% block content %}
         {% endblock %}
     </body>

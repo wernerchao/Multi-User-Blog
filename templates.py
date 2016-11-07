@@ -40,10 +40,11 @@ class Handler(webapp2.RequestHandler):
     #     self.response.out.write(*a, **kw)
     # Kind of unnecessary to use this helper function
 
-    def render_str(self, template, **kw):
+    def render_str(self, template, **params):
         # t = jinja_env.get_template(template), kind of unnecessary
         # return t.render(**kw) # kind of unnecessary # return a string
-        return jinja_env.get_template(template).render(**kw)
+        params['user'] = self.user
+        return jinja_env.get_template(template).render(**params)
 
     def render(self, template, **kw):
         self.response.out.write(self.render_str(template, **kw))
@@ -247,7 +248,7 @@ class LoginHandler(Handler):
         u = User.login(username, password)
         if u:
             self.login(u)
-            self.redirect('/welcome')
+            self.redirect('/blog')
         else:
             msg = 'Invalid login'
             self.render('login-form.html', error = msg)
@@ -255,7 +256,7 @@ class LoginHandler(Handler):
 class LogoutHandler(Handler):
     def get(self):
         self.logout()
-        self.redirect('/signup')
+        self.redirect('/blog')
 
 ### Blog stuff starts here
 
