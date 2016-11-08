@@ -264,6 +264,7 @@ class LogoutHandler(Handler):
 class Post(db.Model):
     title = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
+    created_by = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     last_modified = db.DateTimeProperty(auto_now = True)
 
@@ -294,7 +295,7 @@ class NewPostHandler(Handler):
         content = self.request.get("content")
 
         if title and content:
-            p = Post(title = title, content = content)
+            p = Post(title = title, content = content, created_by = self.user.name)
             p.put()
             self.redirect('/blog/%s' % str(p.key().id()))
         else:
@@ -314,11 +315,15 @@ class EditPostHandler(Handler):
     def get(self):
         key = self.request.get("key")
         item = db.get(key)
-        self.render("editpost.html", title = item.title, content = item.content, key=key)
+        # if self.user.name == "werner":
+        self.render("editpost.html", title = item.title, content = item.content, key = key, created_by = item.created_by)
+        # else:
+        #     self.render("blog.html", error = "You don't have the permission to edit this post'")
 
     def post(self):
         title = self.request.get("title")
         content = self.request.get("content")
+
         key = self.request.get("key")
         item = db.get(key)
         if title and content:

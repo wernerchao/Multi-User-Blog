@@ -1,12 +1,13 @@
 <!-- How individual post is displayed -->
 <div class="post">
     <div class="post-heading">
-        <div class="post-title">
+        <h4 class="post-title">
             {{p.title}}
-        </div>
+        </h4>
         <div class="post-date">
             {{p.created.strftime("%b %d, %Y")}}
         </div>
+        <br/>
     </div>
 
     <div class="post-content">
@@ -15,9 +16,11 @@
     <form action="/blog/editpost" method="get">
         <input type="hidden" name="key" value="{{p.key()}}">
         <input type="submit" value="edit">
+        {{ error }}
     </form>
     <form action="/blog/deletepost" method="post">
         <input type="hidden" name="key" value="{{p.key()}}">
         <input type="submit" value="delete">
     </form>
+    <hr />
 </div>

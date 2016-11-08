@@ -1,30 +1,35 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>
-    New Post
-</h2>
-<form method="post">
-    <label>
-        <div>Blog Title</div>
-        <input type="hidden" name="key" value="{{ key }}"/>
-        <input type="text" name="title" value="{{ title }}"/>
-    </label>
-    <br>
-    <br>
+{% if user == created_by %}
+    <h2>
+        New Post
+    </h2>
+    <form method="post">
+        <label>
+            <div>Blog Title</div>
+            <input type="hidden" name="key" value="{{ key }}"/>
+            <input type="text" name="title" value="{{ title }}"/>
+        </label>
+        <br>
+        <br>
 
-    <label>
-        <div>Blog Content</div>
-        <textarea rows="10" cols="50" name="content">{{ content }}</textarea>
-    </label>
-    <br>
-    <br>
+        <label>
+            <div>Blog Content</div>
+            <textarea rows="10" cols="50" name="content">{{ content }}</textarea>
+        </label>
+        <br>
+        <br>
 
-    <label>
-        <input type="submit" />
-    </label>
-</form>
-<div style="color: red">
-    {{ error }}
-<div>
+        <label>
+            <input type="submit" />
+        </label>
+    </form>
+    <div style="color: red">
+        {{ error }}
+    <div>
+{% else %}
+    <div style="color: red"> You don't have permission to edit</div>
+{% endif %}
+
 {% endblock %}
