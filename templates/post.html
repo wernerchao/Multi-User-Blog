@@ -1,7 +1,8 @@
+<!-- How individual post is displayed -->
 <div class="post">
     <div class="post-heading">
         <div class="post-title">
-            {{p.subject}}
+            {{p.title}}
         </div>
         <div class="post-date">
             {{p.created.strftime("%b %d, %Y")}}
@@ -11,6 +12,12 @@
     <div class="post-content">
         {{p._render_text | safe}}
     </div>
-    <button type="button">edit</button>
-    <button type="button">delete</button>
+    <form action="/blog/editpost" method="post">
+        <input type="hidden" name="key" value="{{p.key()}}">
+        <input type="submit" value="edit">
+    </form>
+    <form action="/blog/deletepost" method="post">
+        <input type="hidden" name="key" value="{{p.key()}}">
+        <input type="submit" value="delete">
+    </form>
 </div>

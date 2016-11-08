@@ -284,7 +284,7 @@ class PostPageHandler(Handler):
         post = db.get(key)
         self.render("post_page.html", post = post)
 
-# Handles the form to take in new inputs
+# Handles the form to take in new input post
 class NewPostHandler(Handler):
     def get(self):
         self.render("newpost.html")
@@ -301,6 +301,23 @@ class NewPostHandler(Handler):
             error = "We need both title and content"
             self.render("newpost.html", title = title, content = content, error = error)
 
+# Handles the delete button click to delete the specific post
+class DeletePostHandler(Handler):
+    def post(self):
+        key = self.request.get("key")
+        item = db.get(key)
+        db.delete(item)
+        self.response.out.write("Your post '%s' has been successfully deleted" %key)
+
+# Handles the edit button click to edit the specific post
+class EditPostHandler(Handler):
+    def post(self):
+        key = self.request.get("key")
+        item = db.get(key)
+
+    def get(self):
+        self.render("editpost.html", title = item.title, content = item.content, error = item.error)
+
 app = webapp2.WSGIApplication([
                                 ('/', MainPage), 
                                 ('/fizzbuzz', FizzBuzzHandler),
@@ -311,5 +328,7 @@ app = webapp2.WSGIApplication([
                                 ('/logout', LogoutHandler),
                                 ('/blog/?', BlogHandler),
                                 ('/blog/([0-9]+)', PostPageHandler),
-                                ('/blog/newpost', NewPostHandler)
+                                ('/blog/newpost', NewPostHandler),
+                                ('/blog/editpost', EditPostHandler),
+                                ('/blog/deletepost', DeletePostHandler)
                                 ], debug=True)
