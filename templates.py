@@ -311,12 +311,25 @@ class DeletePostHandler(Handler):
 
 # Handles the edit button click to edit the specific post
 class EditPostHandler(Handler):
-    def post(self):
+    def get(self):
         key = self.request.get("key")
         item = db.get(key)
+        self.render("editpost.html", title = item.title, content = item.content, key=key)
 
-    def get(self):
-        self.render("editpost.html", title = item.title, content = item.content, error = item.error)
+    def post(self):
+        title = self.request.get("title")
+        content = self.request.get("content")
+        key = self.request.get("key")
+        item = db.get(key)
+        if title and content:
+            item.title = title
+            item.content = content
+            item.put()
+            # self.response.out.write("Your post: '%s'." %title)
+            self.redirect('/blog/%s' % str(item.key().id()))
+        else:
+            error = "We need both title and content"
+            # self.render("newpost.html", title = title, content = content, error = error)
 
 app = webapp2.WSGIApplication([
                                 ('/', MainPage), 

@@ -12,7 +12,7 @@
     <div class="post-content">
         {{p._render_text | safe}}
     </div>
-    <form action="/blog/editpost" method="post">
+    <form action="/blog/editpost" method="get">
         <input type="hidden" name="key" value="{{p.key()}}">
         <input type="submit" value="edit">
     </form>
