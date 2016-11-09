@@ -326,7 +326,7 @@ class EditPostHandler(Handler):
             item.title = title
             item.content = content
             item.put()
-            self.redirect('/blog')
+            return self.redirect('/blog')
         else:
             error = "We need both title and content"
 
@@ -335,14 +335,13 @@ class LikePostHandler(Handler):
     def post(self):
         key = self.request.get("key")
         item = db.get(key)
-        likes = item.likes
         if self.user and self.user.name != item.created_by:
-            likes += 1
-            item.likes = likes
+            item.likes += 1
             item.put()
-            self.response.out.write("Current # of likes: %s" %item.likes)
+            return self.redirect('/blog')
+            # self.response.out.write("Current # of likes: %s" %item.likes)
         else:
-            self.response.out.write("You don't have the permission to like this post")
+            return self.response.out.write("You don't have the permission to like this post")
 
 # Handles the comment input on each post
 class CommentPostHandler(Handler):
@@ -354,9 +353,10 @@ class CommentPostHandler(Handler):
         if self.user and comment:
             p = Comment(parent = item.key(), title = 'none', content = comment, created_by = self.user.name, likes = 0)
             p.put()
-            self.response.out.write("Your comment '%s' has been submitted" %comment)
+            return self.redirect('/blog')
+            # self.response.out.write("Your comment '%s' has been submitted" %comment)
         else:
-            self.response.out.write("You can't submit a comment like this")
+            return self.response.out.write("You can't submit a comment like this")
 
 app = webapp2.WSGIApplication([
                                 ('/', MainPage), 
