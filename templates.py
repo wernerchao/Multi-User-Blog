@@ -264,13 +264,28 @@ class LogoutHandler(Handler):
 class Post(db.Model):
     title = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
+    likes = db.IntegerProperty(required = True)
+    created_by = db.StringProperty(required = True)
+    created = db.DateTimeProperty(auto_now_add = True)
+    last_modified = db.DateTimeProperty(auto_now = True)
+
+    def render(self):
+        comments = db.GqlQuery("select * from Comment order by created desc limit 10 ")
+        self._render_text = self.content.replace('\n', '<br>')
+        return render_str("post.html", p = self, comments = comments)
+
+# Handles how each post is displayed
+class Comment(db.Model):
+    title = db.StringProperty(required = True)
+    content = db.TextProperty(required = True)
+    likes = db.IntegerProperty(required = True)
     created_by = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     last_modified = db.DateTimeProperty(auto_now = True)
 
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
-        return render_str("post.html", p = self)
+        return render_str("comment.html", p = self)
 
 # Handles the home page of the blog
 class BlogHandler(Handler):
@@ -295,7 +310,7 @@ class NewPostHandler(Handler):
         content = self.request.get("content")
 
         if title and content:
-            p = Post(title = title, content = content, created_by = self.user.name)
+            p = Post(title = title, content = content, created_by = self.user.name, likes = 0)
             p.put()
             self.redirect('/blog/%s' % str(p.key().id()))
         else:
@@ -330,11 +345,38 @@ class EditPostHandler(Handler):
             item.title = title
             item.content = content
             item.put()
-            # self.response.out.write("Your post: '%s'." %title)
             self.redirect('/blog/%s' % str(item.key().id()))
         else:
             error = "We need both title and content"
-            # self.render("newpost.html", title = title, content = content, error = error)
+
+# Handles the like+1 button click
+class LikePostHandler(Handler):
+    def post(self):
+        key = self.request.get("key")
+        item = db.get(key)
+        likes = item.likes
+        if self.user and self.user.name != item.created_by:
+            likes += 1
+            item.likes = likes
+            item.put()
+            self.response.out.write("Current # of likes: %s" %item.likes)
+        else:
+            self.response.out.write("You don't have the permission to like this post'")
+
+# Handles the comment input on each post
+class CommentPostHandler(Handler):
+    def post(self):
+        comment = self.request.get("comment")
+        key = self.request.get("key")
+        item = db.get(key)
+
+        if self.user and comment:
+            p = Comment(parent = item.key(), title = 'none', content = comment, created_by = self.user.name, likes = 0)
+            p.put()
+            # self.redirect('/blog')
+            self.response.out.write("Your comment '%s' has been submitted" %comment)
+        else:
+            self.response.out.write("You can't submit a comment like this")
 
 app = webapp2.WSGIApplication([
                                 ('/', MainPage), 
@@ -348,5 +390,7 @@ app = webapp2.WSGIApplication([
                                 ('/blog/([0-9]+)', PostPageHandler),
                                 ('/blog/newpost', NewPostHandler),
                                 ('/blog/editpost', EditPostHandler),
-                                ('/blog/deletepost', DeletePostHandler)
+                                ('/blog/deletepost', DeletePostHandler),
+                                ('/blog/likepost', LikePostHandler),
+                                ('/blog/commentpost', CommentPostHandler)
                                 ], debug=True)

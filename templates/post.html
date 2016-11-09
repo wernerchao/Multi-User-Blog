@@ -16,11 +16,25 @@
     <form action="/blog/editpost" method="get">
         <input type="hidden" name="key" value="{{p.key()}}">
         <input type="submit" value="edit">
-        {{ error }}
     </form>
     <form action="/blog/deletepost" method="post">
         <input type="hidden" name="key" value="{{p.key()}}">
         <input type="submit" value="delete">
+    </form>
+    <form action="/blog/likepost" method="post">
+        <input type="hidden" name="key" value="{{p.key()}}">
+        <input type="submit" value="like+1">
+        {{ p.likes }}
+    </form>
+    {% for comment in comments %}
+    <p>
+        {{ comment.render() | safe}}
+    </p>
+    {% endfor %}
+    <form action="/blog/commentpost" method="post">
+        <input type="hidden" name="key" value="{{p.key()}}">
+        <textarea rows="5" cols="20" name="comment"></textarea>
+        <input type="submit" value="comment">
     </form>
     <hr />
 </div>
