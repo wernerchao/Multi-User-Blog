@@ -1,3 +1,9 @@
-<div class="post-content">
+<h5>
+    Commented by: {{p.created_by}}
+</h5>
+<p>
+    Time: {{p.created.strftime("%b %d, %Y")}}
+</p>
+<p>
     {{p._render_text | safe}}
-</div>
+</p>

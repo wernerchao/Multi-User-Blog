@@ -270,7 +270,9 @@ class Post(db.Model):
     last_modified = db.DateTimeProperty(auto_now = True)
 
     def render(self):
-        comments = db.GqlQuery("select * from Comment order by created desc limit 10 ")
+        # comments = db.GqlQuery("select * from Comment order by created desc limit 10 ")
+        key = "aghkZXZ-Tm9uZXIRCxIEUG9zdBiAgICAgMDfCAw"
+        comments = Comment.all().ancestor(self).fetch(10)
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self, comments = comments)
 
