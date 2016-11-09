@@ -37,19 +37,13 @@ def check_secure_val(h):
 
 # Main handler of all things, used this as parent for other classes to extend
 class Handler(webapp2.RequestHandler):
-    # def write(self, *a, **kw):
-    #     self.response.out.write(*a, **kw)
-    # Kind of unnecessary to use this helper function
-
     def render_str(self, template, **params):
-        # t = jinja_env.get_template(template), kind of unnecessary
-        # return t.render(**kw) # kind of unnecessary # return a string
         params['user'] = self.user
         return jinja_env.get_template(template).render(**params)
 
+# Call the write function, and pass in render_str results as argument
     def render(self, template, **kw):
         self.response.out.write(self.render_str(template, **kw))
-        # Call the write function, and pass in render_str results as argument
 
     def set_secure_cookie(self, name, val):
         cookie_val = make_secure_val(val)
@@ -117,6 +111,7 @@ class User(db.Model):
         if u and valid_pw(name, pw, u.pw_hash):
             return u
 
+# Handles the main page
 class MainPage(Handler):
     def get(self):
         if self.user:
@@ -124,41 +119,13 @@ class MainPage(Handler):
         else:
             self.redirect('/signup')
 
-# class FizzBuzzHandler(Handler):
-#     def get(self):
-#         n = self.request.get('n', 0)
-#         n = n and int(n)
-#         self.render('fizzbuzz.html', n = n)
-
-# class ROT13Handler(Handler):
-#     def get(self):
-#         temp = ""
-#         content = self.request.get("content")
-#         for char in content:
-#             stringNumber = ord(char)
-#             rot13 = stringNumber + 13
-#             if stringNumber > 64 and stringNumber < 91: #capital letter conversion
-#                 if rot13 > 90:
-#                     rot13 = rot13 - 90 + 64
-#                 rot13 = chr(rot13)
-#                 temp += rot13
-#             elif stringNumber > 96 and stringNumber < 123: #non-capital letter conversion
-#                 if rot13 > 122:
-#                     rot13 = rot13 - 122 + 96
-#                 rot13 = chr(rot13)
-#                 temp += rot13
-#             else:
-#                 temp += char
-#         self.render('ROT13.html', content = temp)
-
-# Some simple validation methods to check username, password, and email.
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 PASSWORD_RE = re.compile(r"^.{3,20}$")
 EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
 
-### Signup and welcome page here
+### Signup, login, and logout stuff here
 
-# Handle the signup page
+# Basic signup handler to be used/extended by register
 class SignUpHandler(Handler):
     def valid_username(self, username):
         return username and USER_RE.match(username)
@@ -258,7 +225,7 @@ class Post(db.Model):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self, comments = comments)
 
-# Handles how each post is displayed
+# Handles how each comment is displayed
 class Comment(db.Model):
     title = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
@@ -295,9 +262,10 @@ class NewPostHandler(Handler):
     def post(self):
         title = self.request.get("title")
         content = self.request.get("content")
+        liked_by = [self.user.name]
 
         if title and content:
-            p = Post(title = title, content = content, created_by = self.user.name, likes = 0)
+            p = Post(title = title, content = content, created_by = self.user.name, likes = 0, liked_by = liked_by)
             p.put()
             self.redirect('/blog/%s' % str(p.key().id()))
         else:
@@ -348,16 +316,18 @@ class LikePostHandler(Handler):
     def post(self):
         key = self.request.get("key")
         item = db.get(key)
-        liked_dict = {x: 1 for x in item.liked_by}
+        liked_dict = {x: x for x in item.liked_by}
+        exist = self.user.name in liked_dict.keys()
         if self.user:
-            if self.user.name != item.created_by and liked_dict[self.user.name] != True:
+            # self.response.out.write("%s" %test)
+            if exist:
+                self.response.out.write("You don't have permission to like this post")
+            else:
                 item.liked_by.append(self.user.name)
                 item.likes += 1
                 item.put()
                 time.sleep(0.1)
                 return self.redirect('/blog')
-            else:
-                self.response.out.write("You don't have permission to like this post")
         else:
             return self.redirect('/signup')
 
@@ -382,8 +352,6 @@ class CommentPostHandler(Handler):
 
 app = webapp2.WSGIApplication([
                                 ('/', MainPage), 
-                                # ('/fizzbuzz', FizzBuzzHandler),
-                                # ('/ROT13', ROT13Handler),
                                 ('/signup', Register),
                                 ('/login', LoginHandler),
                                 ('/logout', LogoutHandler),
