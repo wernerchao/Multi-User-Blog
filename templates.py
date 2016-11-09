@@ -285,7 +285,10 @@ class PostPageHandler(Handler):
 # Handles the form to take in new input post
 class NewPostHandler(Handler):
     def get(self):
-        self.render("newpost.html")
+        if self.user:
+            self.render("newpost.html")
+        else:
+            self.response.out.write("You need to login!")
 
     def post(self):
         title = self.request.get("title")
@@ -304,11 +307,14 @@ class DeletePostHandler(Handler):
     def post(self):
         key = self.request.get("key")
         item = db.get(key)
-        if item.created_by == self.user.name:
-            db.delete(item)
-            self.response.out.write("Your post '%s' has been successfully deleted" %key)
+        if self.user:
+            if item.created_by == self.user.name:
+                db.delete(item)
+                self.response.out.write("Your post '%s' has been successfully deleted" %key)
+            else:
+                self.response.out.write("Your don't have permission to delete!'")
         else:
-            self.response.out.write("Your don't have permission to delete!'")
+            self.response.out.write("Your need to login!")
 
 # Handles the edit button click to edit the specific post
 class EditPostHandler(Handler):
