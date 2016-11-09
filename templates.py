@@ -5,6 +5,7 @@ import re
 import hmac
 import hashlib
 import random
+import time
 from string import letters
 
 from google.appengine.ext import db
@@ -247,6 +248,7 @@ class Post(db.Model):
     title = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
     likes = db.IntegerProperty(required = True)
+    liked_by = db.ListProperty(str)
     created_by = db.StringProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
     last_modified = db.DateTimeProperty(auto_now = True)
@@ -307,14 +309,24 @@ class DeletePostHandler(Handler):
     def post(self):
         key = self.request.get("key")
         item = db.get(key)
-        self.render('deletepost.html', post = item)
+        if self.user:
+            if item.created_by == self.user.name:
+                db.delete(item)
+                self.render('deletepost.html', post = item)
+            else:
+                self.render('deletepost.html', post = item)
+        else:
+            return self.redirect('/signup')
 
 # Handles the edit button click to edit the specific post
 class EditPostHandler(Handler):
     def get(self):
         key = self.request.get("key")
         item = db.get(key)
-        self.render("editpost.html", title = item.title, content = item.content, key = key, created_by = item.created_by)
+        if self.user:
+            self.render("editpost.html", title = item.title, content = item.content, key = key, created_by = item.created_by)
+        else:
+            self.redirect('/signup')
 
     def post(self):
         title = self.request.get("title")
@@ -326,6 +338,7 @@ class EditPostHandler(Handler):
             item.title = title
             item.content = content
             item.put()
+            time.sleep(0.1)
             return self.redirect('/blog')
         else:
             error = "We need both title and content"
@@ -335,13 +348,18 @@ class LikePostHandler(Handler):
     def post(self):
         key = self.request.get("key")
         item = db.get(key)
-        if self.user and self.user.name != item.created_by:
-            item.likes += 1
-            item.put()
-            return self.redirect('/blog')
-            # self.response.out.write("Current # of likes: %s" %item.likes)
+        liked_dict = {x: 1 for x in item.liked_by}
+        if self.user:
+            if self.user.name != item.created_by and liked_dict[self.user.name] != True:
+                item.liked_by.append(self.user.name)
+                item.likes += 1
+                item.put()
+                time.sleep(0.1)
+                return self.redirect('/blog')
+            else:
+                self.response.out.write("You don't have permission to like this post")
         else:
-            return self.response.out.write("You don't have the permission to like this post")
+            return self.redirect('/signup')
 
 # Handles the comment input on each post
 class CommentPostHandler(Handler):
@@ -350,13 +368,17 @@ class CommentPostHandler(Handler):
         key = self.request.get("key")
         item = db.get(key)
 
-        if self.user and comment:
-            p = Comment(parent = item.key(), title = 'none', content = comment, created_by = self.user.name, likes = 0)
-            p.put()
-            return self.redirect('/blog')
-            # self.response.out.write("Your comment '%s' has been submitted" %comment)
+        if self.user:
+            if comment:
+                p = Comment(parent = item.key(), title = 'none', content = comment, created_by = self.user.name, likes = 0)
+                p.put()
+                return self.redirect('/blog')
+                # self.response.out.write("Your comment '%s' has been submitted" %comment)
+            else:
+                return self.response.out.write("You can't submit an empty comment")
         else:
-            return self.response.out.write("You can't submit a comment like this")
+            return self.redirect('/signup')
+            
 
 app = webapp2.WSGIApplication([
                                 ('/', MainPage), 
