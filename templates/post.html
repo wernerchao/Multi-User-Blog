@@ -1,39 +1,64 @@
 <!-- How individual post is displayed -->
 <div class="post">
     <div class="post-heading">
-        <h4 class="post-title">
-            {{p.title}}
-        </h4>
-        <div class="post-date">
-            {{p.created.strftime("%b %d, %Y")}}
-        </div>
-        <br/>
+        <table>
+            <tr>
+                <th>
+                    <p class="post-title">
+                        {{ p.title }}
+                    </p>
+                </th>
+                <th>
+                    <h5 class="post-date">
+                        Last Modified: {{ p.created.strftime("%b %d, %Y") }}
+                    </h5>
+                </th>
+            </tr>
+            <tr>
+                <td>
+                    <h5 class="post-author">
+                        Posted By: {{ p.created_by }}
+                    </h5>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="post-content">
+                        {{ p._render_text | safe }}
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <form class="post-content" action="/blog/likepost" method="post">
+                        <input type="hidden" name="key" value="{{p.key()}}">
+                        <input type="submit" value="like+1">
+                        {{ p.likes }}
+                    </form>
+                </td>
+                <td>
+                    <form class="post-content" action="/blog/editpost" method="get">
+                        <input type="hidden" name="key" value="{{p.key()}}">
+                        <input type="submit" value="edit">
+                    </form>
+                </td>
+                <td>
+                    <form class="post-content" action="/blog/deletepost" method="post">
+                        <input type="hidden" name="key" value="{{p.key()}}">
+                        <input type="submit" value="delete">
+                    </form>
+                </td>
+            </tr>
+        </table>
     </div>
-
-    <div class="post-content">
-        {{p._render_text | safe}}
-    </div>
-    <form action="/blog/editpost" method="get">
-        <input type="hidden" name="key" value="{{p.key()}}">
-        <input type="submit" value="edit">
-    </form>
-    <form action="/blog/deletepost" method="post">
-        <input type="hidden" name="key" value="{{p.key()}}">
-        <input type="submit" value="delete">
-    </form>
-    <form action="/blog/likepost" method="post">
-        <input type="hidden" name="key" value="{{p.key()}}">
-        <input type="submit" value="like+1">
-        {{ p.likes }}
-    </form>
     {% for comment in comments %}
     <p>
-        {{ comment.render() | safe}}
+        {{ comment.render() | safe }}
     </p>
     {% endfor %}
     <form action="/blog/commentpost" method="post">
         <input type="hidden" name="key" value="{{p.key()}}">
-        <textarea rows="5" cols="20" name="comment"></textarea>
+        <textarea class="comment" rows="5" cols="20" name="comment"></textarea>
         <input type="submit" value="comment">
     </form>
     <hr />

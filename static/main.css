@@ -101,5 +101,10 @@ input[type=submit] {
 
 .post-content {
     margin-top: 5px;
+    width: 100%;
 }
 
+.comment {
+    width: 150px;
+    height: 100px;
+}

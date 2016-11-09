@@ -1,18 +1,39 @@
-<span>------------------------------------------------</span>
-<h5>
-    Commented by: {{p.created_by}}
-</h5>
-<p>
-    Time: {{p.created.strftime("%b %d, %Y")}}
-</p>
-<p>
-    {{p._render_text | safe}}
-</p>
-<form action="/blog/editpost" method="get">
-    <input type="hidden" name="key" value="{{p.key()}}">
-    <input type="submit" value="edit">
-</form>
-<form action="/blog/deletepost" method="post">
-    <input type="hidden" name="key" value="{{p.key()}}">
-    <input type="submit" value="delete">
-</form>
+<table class="post-heading">
+    <tr>
+        <th>
+            <h4>
+                Commented by: {{p.created_by}}
+            </h4>
+        </th>
+    </tr>
+    <tr>
+        <td>
+            <p class="post-content">
+                Time: {{p.created.strftime("%b %d, %Y")}}
+            </p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p class="post-content">
+                {{p._render_text | safe}}
+            </p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <form action="/blog/editpost" method="get">
+                <input type="hidden" name="key" value="{{p.key()}}">
+                <input type="submit" value="edit">
+            </form>
+        </td>
+        <td>
+            <form action="/blog/deletepost" method="post">
+                <input type="hidden" name="key" value="{{p.key()}}">
+                <input type="submit" value="delete">
+            </form>
+        </td>
+    </tr>
+    <tr>
+    </tr>
+</table>

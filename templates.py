@@ -118,47 +118,37 @@ class User(db.Model):
 
 class MainPage(Handler):
     def get(self):
-        self.response.headers['Content-Type'] = 'text/plain'
-        visits = 0
-        visit_cookie_val = self.request.cookies.get('visits')
-        if visit_cookie_val:
-            cookie_val = check_secure_val(visit_cookie_val) #if check failed, returns None
-            if cookie_val:
-                visits = int(cookie_val) #if above check failed, visits = int(None), which is 0
+        if self.user:
+            self.render('welcome.html', username = self.user.name)
+        else:
+            self.redirect('/signup')
 
-        visits += 1
+# class FizzBuzzHandler(Handler):
+#     def get(self):
+#         n = self.request.get('n', 0)
+#         n = n and int(n)
+#         self.render('fizzbuzz.html', n = n)
 
-        new_cookie_val = make_secure_val(str(visits))
-
-        self.response.headers.add_header('Set-Cookie', 'visits = %s' % new_cookie_val)
-        self.response.out.write("You've been here %s times" % visits)
-
-class FizzBuzzHandler(Handler):
-    def get(self):
-        n = self.request.get('n', 0)
-        n = n and int(n)
-        self.render('fizzbuzz.html', n = n)
-
-class ROT13Handler(Handler):
-    def get(self):
-        temp = ""
-        content = self.request.get("content")
-        for char in content:
-            stringNumber = ord(char)
-            rot13 = stringNumber + 13
-            if stringNumber > 64 and stringNumber < 91: #capital letter conversion
-                if rot13 > 90:
-                    rot13 = rot13 - 90 + 64
-                rot13 = chr(rot13)
-                temp += rot13
-            elif stringNumber > 96 and stringNumber < 123: #non-capital letter conversion
-                if rot13 > 122:
-                    rot13 = rot13 - 122 + 96
-                rot13 = chr(rot13)
-                temp += rot13
-            else:
-                temp += char
-        self.render('ROT13.html', content = temp)
+# class ROT13Handler(Handler):
+#     def get(self):
+#         temp = ""
+#         content = self.request.get("content")
+#         for char in content:
+#             stringNumber = ord(char)
+#             rot13 = stringNumber + 13
+#             if stringNumber > 64 and stringNumber < 91: #capital letter conversion
+#                 if rot13 > 90:
+#                     rot13 = rot13 - 90 + 64
+#                 rot13 = chr(rot13)
+#                 temp += rot13
+#             elif stringNumber > 96 and stringNumber < 123: #non-capital letter conversion
+#                 if rot13 > 122:
+#                     rot13 = rot13 - 122 + 96
+#                 rot13 = chr(rot13)
+#                 temp += rot13
+#             else:
+#                 temp += char
+#         self.render('ROT13.html', content = temp)
 
 # Some simple validation methods to check username, password, and email.
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
@@ -227,15 +217,7 @@ class Register(SignUpHandler):
 
             # This login function actually just sets the cookie.
             self.login(u)
-            self.redirect("/welcome")
-
-# After the user signs up, will be redirected to a welcome page with his name displayed.
-class WelcomeHandler(Handler):
-    def get(self):
-        if self.user:
-            self.render('welcome.html', username = self.user.name)
-        else:
-            self.redirect('/signup')
+            self.redirect("/")
 
 class LoginHandler(Handler):
     def get(self):
@@ -270,8 +252,6 @@ class Post(db.Model):
     last_modified = db.DateTimeProperty(auto_now = True)
 
     def render(self):
-        # comments = db.GqlQuery("select * from Comment order by created desc limit 10 ")
-        key = "aghkZXZ-Tm9uZXIRCxIEUG9zdBiAgICAgMDfCAw"
         comments = Comment.all().ancestor(self).fetch(10)
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self, comments = comments)
@@ -363,7 +343,7 @@ class LikePostHandler(Handler):
             item.put()
             self.response.out.write("Current # of likes: %s" %item.likes)
         else:
-            self.response.out.write("You don't have the permission to like this post'")
+            self.response.out.write("You don't have the permission to like this post")
 
 # Handles the comment input on each post
 class CommentPostHandler(Handler):
@@ -375,17 +355,15 @@ class CommentPostHandler(Handler):
         if self.user and comment:
             p = Comment(parent = item.key(), title = 'none', content = comment, created_by = self.user.name, likes = 0)
             p.put()
-            # self.redirect('/blog')
             self.response.out.write("Your comment '%s' has been submitted" %comment)
         else:
             self.response.out.write("You can't submit a comment like this")
 
 app = webapp2.WSGIApplication([
                                 ('/', MainPage), 
-                                ('/fizzbuzz', FizzBuzzHandler),
-                                ('/ROT13', ROT13Handler),
+                                # ('/fizzbuzz', FizzBuzzHandler),
+                                # ('/ROT13', ROT13Handler),
                                 ('/signup', Register),
-                                ('/welcome', WelcomeHandler),
                                 ('/login', LoginHandler),
                                 ('/logout', LogoutHandler),
                                 ('/blog/?', BlogHandler),
