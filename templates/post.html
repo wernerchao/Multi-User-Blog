@@ -3,11 +3,11 @@
     <div class="post-heading">
         <table>
             <tr>
-                <th>
+                <td>
                     <p class="post-title">
                         {{ p.title }}
                     </p>
-                </th>
+                </td>
                 <th>
                     <h5 class="post-date">
                         Last Modified: {{ p.created.strftime("%b %d, %Y") }}
@@ -31,20 +31,20 @@
             <tr>
                 <td>
                     <form class="post-content" action="/blog/likepost" method="post">
-                        <input type="hidden" name="key" value="{{p.key()}}">
+                        <input type="hidden" name="key" value="{{ p.key ()}}">
                         <input type="submit" value="like+1">
                         {{ p.likes }}
                     </form>
                 </td>
                 <td>
                     <form class="post-content" action="/blog/editpost" method="get">
-                        <input type="hidden" name="key" value="{{p.key()}}">
+                        <input type="hidden" name="key" value="{{ p.key ()}}">
                         <input type="submit" value="edit">
                     </form>
                 </td>
                 <td>
                     <form class="post-content" action="/blog/deletepost" method="post">
-                        <input type="hidden" name="key" value="{{p.key()}}">
+                        <input type="hidden" name="key" value="{{ p.key ()}}">
                         <input type="submit" value="delete">
                     </form>
                 </td>
@@ -58,7 +58,7 @@
     </p>
     {% endfor %}
     <form action="/blog/commentpost" method="post">
-        <input type="hidden" name="key" value="{{p.key()}}">
+        <input type="hidden" name="key" value="{{ p.key() }}">
         <textarea class="comment" rows="5" cols="20" name="comment"></textarea>
         <input type="submit" value="comment">
     </form>

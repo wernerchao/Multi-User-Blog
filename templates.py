@@ -307,14 +307,7 @@ class DeletePostHandler(Handler):
     def post(self):
         key = self.request.get("key")
         item = db.get(key)
-        if self.user:
-            if item.created_by == self.user.name:
-                db.delete(item)
-                self.response.out.write("Your post '%s' has been successfully deleted" %key)
-            else:
-                self.response.out.write("Your don't have permission to delete!'")
-        else:
-            self.response.out.write("Your need to login!")
+        self.render('deletepost.html', post = item)
 
 # Handles the edit button click to edit the specific post
 class EditPostHandler(Handler):
@@ -333,7 +326,7 @@ class EditPostHandler(Handler):
             item.title = title
             item.content = content
             item.put()
-            self.redirect('/blog/%s' % str(item.key().id()))
+            self.redirect('/blog')
         else:
             error = "We need both title and content"
 

@@ -1,0 +1,25 @@
+<!-- Handles how the delete post page is displayed -->
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if user %}
+    {% if user.name == post.created_by %}
+    <p>Your post {{ post.content }} has been successfully deleted</p>
+    {% else %}
+    <p class="error">You don't have permission to delete!</p>
+    {% endif %}
+{% else %}
+    <p class="error">You need to login!</p>
+{% endif %}
+
+{% endblock %}
+
+<!--if self.user:
+    if item.created_by == self.user.name:
+        db.delete(item)
+        self.response.out.write("Your post '%s' has been successfully deleted" %key)
+    else:
+        self.response.out.write("Your don't have permission to delete!'")
+else:
+    self.response.out.write("Your need to login!")-->

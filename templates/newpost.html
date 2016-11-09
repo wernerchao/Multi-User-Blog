@@ -1,28 +1,46 @@
+<!-- Handles the new post form -->
 {% extends "base.html" %}
 
 {% block content %}
-<h2>
-    New Post
-</h2>
-<form method="post">
-    <label>
-        <div>Blog Title</div>
-        <input type="text" name="title" value="{{ title }}"/>
-    </label>
-    <br>
-    <br>
+<table>
+    <tr>
+        <td>
+            <h2>
+                New Post
+            </h2>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <form method="post">
+                <label>
+                    <div>Blog Title</div>
+                    <input type="text" name="title" value="{{ title }}"/>
+                </label>
+                <br>
+                <br>
 
-    <label>
-        <div>Blog Content</div>
-        <textarea rows="10" cols="50" name="content">{{ content }}</textarea>
-    </label>
-    <br>
-    <br>
+                <label>
+                    <div>Blog Content</div>
+                    <textarea rows="10" cols="50" name="content">{{ content }}</textarea>
+                </label>
+                <br>
+                <br>
 
-    <label>
-        <input type="submit" />
-    </label>
-</form>
+                <label>
+                    <input type="submit" />
+                </label>
+            </form>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <form action="/blog" method="get">
+                <input type="submit" value="cancel" />
+            </form>
+        </td>
+    </tr>
+</table>
 <div style="color: red">
     {{ error }}
 <div>
