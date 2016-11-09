@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-{% if user == created_by %}
+{% if user.name == created_by %}
     <h2>
         New Post
     </h2>
@@ -30,6 +30,8 @@
     <div>
 {% else %}
     <div style="color: red"> You don't have permission to edit</div>
+    <div>{{ user.name }}</div>
+    <div>{{ created_by }}</div>
 {% endif %}
 
 {% endblock %}

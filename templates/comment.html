@@ -1,3 +1,4 @@
+<span>------------------------------------------------</span>
 <h5>
     Commented by: {{p.created_by}}
 </h5>
@@ -7,3 +8,11 @@
 <p>
     {{p._render_text | safe}}
 </p>
+<form action="/blog/editpost" method="get">
+    <input type="hidden" name="key" value="{{p.key()}}">
+    <input type="submit" value="edit">
+</form>
+<form action="/blog/deletepost" method="post">
+    <input type="hidden" name="key" value="{{p.key()}}">
+    <input type="submit" value="delete">
+</form>
