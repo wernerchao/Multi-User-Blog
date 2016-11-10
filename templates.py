@@ -228,9 +228,9 @@ class LogoutHandler(Handler):
 class Post(db.Model):
     title = db.StringProperty(required=True)
     content = db.TextProperty(required=True)
-    likes = db.IntegerProperty(required=True)
+    likes = db.IntegerProperty(required=False)
     liked_by = db.ListProperty(str)
-    created_by = db.StringProperty(required=True)
+    created_by = db.StringProperty(required=False)
     created = db.DateTimeProperty(auto_now_add=True)
     last_modified = db.DateTimeProperty(auto_now=True)
 
@@ -244,8 +244,7 @@ class Post(db.Model):
 class Comment(db.Model):
     title = db.StringProperty(required=True)
     content = db.TextProperty(required=True)
-    likes = db.IntegerProperty(required=True)
-    created_by = db.StringProperty(required=True)
+    created_by = db.StringProperty(required=False)
     created = db.DateTimeProperty(auto_now_add=True)
     last_modified = db.DateTimeProperty(auto_now=True)
 
@@ -348,8 +347,8 @@ class LikePostHandler(Handler):
         key = self.request.get("key")
         item = db.get(key)
         liked_dict = {x: x for x in item.liked_by}
-        exist = self.user.name in liked_dict.keys()
         if self.user:
+            exist = self.user.name in liked_dict.keys()
             if exist:
                 self.response.out.write(
                     "You don't have permission to like this post")
@@ -375,8 +374,7 @@ class CommentPostHandler(Handler):
                 p = Comment(parent=item.key(),
                             title='none',
                             content=comment,
-                            created_by=self.user.name,
-                            likes=0)
+                            created_by=self.user.name)
                 p.put()
                 return self.redirect('/blog')
             else:

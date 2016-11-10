@@ -12,6 +12,8 @@ log in/out, post/comment/like blog posts, and edit/delete posts and comments.
 
 ## Quick Start
 
+Here is a [demo](https://multi-user-blog-145402.appspot.com/)
+
 To start using this repository
 
 >  ```> $ git clone https://github.com/wernerchao/Multi-User-Blog.git```
