@@ -21,13 +21,11 @@
                     </h5>
                 </td>
             </tr>
-            <tr>
-                <td>
-                    <div class="post-content">
-                        {{ p._render_text | safe }}
-                    </div>
-                </td>
-            </tr>
+        </table>
+        <p class="post-content">
+            {{ p._render_text | safe }}
+        </p>
+        <table>
             <tr>
                 <td>
                     <form class="post-content" action="/blog/likepost" method="post">
@@ -36,6 +34,8 @@
                         {{ p.likes }}
                     </form>
                 </td>
+            </tr>
+            <tr>
                 <td>
                     <form class="post-content" action="/blog/editpost" method="get">
                         <input type="hidden" name="key" value="{{ p.key ()}}">
