@@ -306,14 +306,17 @@ class DeletePostHandler(Handler):
     def post(self):
         key = self.request.get("key")
         item = db.get(key)
-        if self.user:
-            if item.created_by == self.user.name:
-                db.delete(item)
-                self.render('deletepost.html', post=item)
+        if key:
+            if self.user:
+                if item.created_by == self.user.name:
+                    db.delete(item)
+                    self.render('deletepost.html', post=item)
+                else:
+                    self.render('deletepost.html', post=item)
             else:
-                self.render('deletepost.html', post=item)
+                return self.redirect('/signup')
         else:
-            return self.redirect('/signup')
+            self.render('deletepost.html', post=item)
 
 
 # Handles the edit button click to edit the specific post.
@@ -321,14 +324,20 @@ class EditPostHandler(Handler):
     def get(self):
         key = self.request.get("key")
         item = db.get(key)
-        if self.user:
-            self.render("editpost.html",
-                        title=item.title,
-                        content=item.content,
-                        key=key,
-                        created_by=item.created_by)
+        if key:
+            if self.user:
+                if item.created_by == self.user.name:
+                    self.render("editpost.html",
+                                title=item.title,
+                                content=item.content,
+                                key=key,
+                                created_by=item.created_by)
+                else:
+                    self.render('editpost.html', post=item)
+            else:
+                self.redirect('/signup')
         else:
-            self.redirect('/signup')
+            self.response.out.write("Your post doesn't exist!'")
 
     def post(self):
         title = self.request.get("title")
@@ -336,15 +345,17 @@ class EditPostHandler(Handler):
 
         key = self.request.get("key")
         item = db.get(key)
-        if title and content:
-            item.title = title
-            item.content = content
-            item.put()
-            time.sleep(0.1)
-            return self.redirect('/blog')
+        if key:
+            if title and content:
+                item.title = title
+                item.content = content
+                item.put()
+                time.sleep(0.1)
+                return self.redirect('/blog')
+            else:
+                error = "We need both title and content"
         else:
-            error = "We need both title and content"
-
+            self.response.out.write("Your post doesn't exist!")
 
 # Handles the like+1 button click.
 class LikePostHandler(Handler):
@@ -352,19 +363,22 @@ class LikePostHandler(Handler):
         key = self.request.get("key")
         item = db.get(key)
         liked_dict = {x: x for x in item.liked_by}
-        if self.user:
-            exist = self.user.name in liked_dict.keys()
-            if exist:
-                self.response.out.write(
-                    "You don't have permission to like this post")
+        if key:
+            if self.user:
+                exist = self.user.name in liked_dict.keys()
+                if exist: # Check if the user already liked the post OR the user is the post owner
+                    self.response.out.write(
+                        "You don't have permission to like this post")
+                else:
+                    item.liked_by.append(self.user.name)
+                    item.likes += 1
+                    item.put()
+                    time.sleep(0.1)
+                    return self.redirect('/blog')
             else:
-                item.liked_by.append(self.user.name)
-                item.likes += 1
-                item.put()
-                time.sleep(0.1)
-                return self.redirect('/blog')
+                return self.redirect('/signup')
         else:
-            return self.redirect('/signup')
+            self.response.out.write("Your post doesn't exist!")
 
 
 # Handles the comment input on each post.
@@ -374,19 +388,22 @@ class CommentPostHandler(Handler):
         key = self.request.get("key")
         item = db.get(key)
 
-        if self.user:
-            if comment:
-                p = Comment(parent=item.key(),
-                            title='none',
-                            content=comment,
-                            created_by=self.user.name)
-                p.put()
-                return self.redirect('/blog')
+        if key:
+            if self.user:
+                if comment:
+                    p = Comment(parent=item.key(),
+                                title='none',
+                                content=comment,
+                                created_by=self.user.name)
+                    p.put()
+                    return self.redirect('/blog')
+                else:
+                    return self.response.out.write(
+                        "You can't submit an empty comment")
             else:
-                return self.response.out.write(
-                    "You can't submit an empty comment")
+                return self.redirect('/signup')
         else:
-            return self.redirect('/signup')
+            self.response.out.write('Your post does not exist!')
 
 
 app = webapp2.WSGIApplication([

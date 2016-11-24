@@ -3,14 +3,18 @@
 
 {% block content %}
 
-{% if user %}
-    {% if user.name == post.created_by %}
-    <p>Your post {{ post.content }} has been successfully deleted</p>
+{% if post %}
+    {% if user %}
+        {% if user.name == post.created_by %}
+        <p>Your post {{ post.content }} has been successfully deleted</p>
+        {% else %}
+        <p class="error">You don't have permission to delete!</p>
+        {% endif %}
     {% else %}
-    <p class="error">You don't have permission to delete!</p>
+        <p class="error">You need to login!</p>
     {% endif %}
 {% else %}
-    <p class="error">You need to login!</p>
+    <p>Your post does not exist</p>
 {% endif %}
 
 {% endblock %}
