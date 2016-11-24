@@ -275,7 +275,8 @@ class NewPostHandler(Handler):
         if self.user:
             self.render("newpost.html")
         else:
-            self.response.out.write("You need to login!")
+            # self.response.out.write("You need to login!")
+            self.render('signup.html', error_general="Please signup or login")
 
     def post(self):
         title = self.request.get("title")
