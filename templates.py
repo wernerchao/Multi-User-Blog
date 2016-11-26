@@ -2,26 +2,27 @@ import os
 import jinja2
 import webapp2
 import re
-import hmac
-import hashlib
-import random
+# import hmac
 import time
-from string import letters
 
 from google.appengine.ext import db
 
-SECRET = 'wernerhelloch@ou$ingthisasmysecrethahaha'
+### Model Refactoring
+from models import User
+from models import Post
+from models import Comment
+
+### Handler Refactoring
+from handlers import Handler
+
+# SECRET = 'wernerhelloch@ou$ingthisasmysecrethahaha'
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(
     loader=jinja2.FileSystemLoader(template_dir), autoescape=True)
 
 
-def render_str(template, **params):
-    t = jinja_env.get_template(template)
-    return t.render(params)
-
-
+### Only used by class Handler
 # Doing hashing using hmac to hash the input value.
 def hash_str(s):
     return hmac.new(SECRET, s).hexdigest()
@@ -38,60 +39,61 @@ def check_secure_val(h):
     else:
         None
 
-
+### Refactoring to Handler.py
 # Main handler of all things, used this as parent for other classes to extend.
-class Handler(webapp2.RequestHandler):
-    def render_str(self, template, **params):
-        params['user'] = self.user
-        return jinja_env.get_template(template).render(**params)
+# class Handler(webapp2.RequestHandler):
+#     def render_str(self, template, **params):
+#         params['user'] = self.user
+#         return jinja_env.get_template(template).render(**params)
 
-    # Call the write function, and pass in render_str results as argument.
-    def render(self, template, **kw):
-        self.response.out.write(self.render_str(template, **kw))
+#     # Call the write function, and pass in render_str results as argument.
+#     def render(self, template, **kw):
+#         self.response.out.write(self.render_str(template, **kw))
 
-    def set_secure_cookie(self, name, val):
-        cookie_val = make_secure_val(val)
-        self.response.headers.add_header(
-            'Set-Cookie',
-            '%s=%s; Path=/' % (name, cookie_val))
+#     def set_secure_cookie(self, name, val):
+#         cookie_val = make_secure_val(val)
+#         self.response.headers.add_header(
+#             'Set-Cookie',
+#             '%s=%s; Path=/' % (name, cookie_val))
 
-    def read_secure_cookie(self, name):
-        cookie_val = self.request.cookies.get(name)
-        return cookie_val and check_secure_val(cookie_val)
+#     def read_secure_cookie(self, name):
+#         cookie_val = self.request.cookies.get(name)
+#         return cookie_val and check_secure_val(cookie_val)
 
-    def login(self, user):
-        self.set_secure_cookie('user_id', str(user.key().id()))
+#     def login(self, user):
+#         self.set_secure_cookie('user_id', str(user.key().id()))
 
-    def logout(self):
-        self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
+#     def logout(self):
+#         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
 
-    def initialize(self, *a, **kw):
-        webapp2.RequestHandler.initialize(self, *a, **kw)
-        uid = self.read_secure_cookie('user_id')
-        self.user = uid and User.by_id(int(uid))
+#     def initialize(self, *a, **kw):
+#         webapp2.RequestHandler.initialize(self, *a, **kw)
+#         uid = self.read_secure_cookie('user_id')
+#         self.user = uid and User.by_id(int(uid))
 
 
+### Refactoring to User.py file
 # User stuff starts here.
-def make_salt(length=5):
-    return ''.join(random.choice(letters) for x in xrange(length))
+# def make_salt(length=5):
+#     return ''.join(random.choice(letters) for x in xrange(length))
 
 
-def make_pw_hash(name, pw, salt=None):
-    if not salt:
-        salt = make_salt()
-    h = hashlib.sha256(name + pw + salt).hexdigest()
-    return '%s,%s' % (salt, h)
+# def make_pw_hash(name, pw, salt=None):
+#     if not salt:
+#         salt = make_salt()
+#     h = hashlib.sha256(name + pw + salt).hexdigest()
+#     return '%s,%s' % (salt, h)
 
 
-def valid_pw(name, password, h):
-    salt = h.split(',')[0]
-    return h == make_pw_hash(name, password, salt)
+# def valid_pw(name, password, h):
+#     salt = h.split(',')[0]
+#     return h == make_pw_hash(name, password, salt)
 
 
-def users_key(group='default'):
-    return db.Key.from_path('users', group)
+# def users_key(group='default'):
+#     return db.Key.from_path('users', group)
 
-### Refactoring to another file
+
 # class User(db.Model):
 #     name = db.StringProperty(required=True)
 #     pw_hash = db.StringProperty(required=True)
@@ -223,34 +225,36 @@ class LogoutHandler(Handler):
         self.redirect('/blog')
 
 
+### Model refactoring to Post.py
 # Blog stuff starts here.
 # Handles how each post is displayed.
-class Post(db.Model):
-    title = db.StringProperty(required=True)
-    content = db.TextProperty(required=True)
-    likes = db.IntegerProperty(required=False)
-    liked_by = db.ListProperty(str)
-    created_by = db.StringProperty(required=False)
-    created = db.DateTimeProperty(auto_now_add=True)
-    last_modified = db.DateTimeProperty(auto_now=True)
+# class Post(db.Model):
+#     title = db.StringProperty(required=True)
+#     content = db.TextProperty(required=True)
+#     likes = db.IntegerProperty(required=False)
+#     liked_by = db.ListProperty(str)
+#     created_by = db.StringProperty(required=False)
+#     created = db.DateTimeProperty(auto_now_add=True)
+#     last_modified = db.DateTimeProperty(auto_now=True)
 
-    def render(self):
-        comments = Comment.all().ancestor(self).order("created").fetch(10)
-        self._render_text = self.content.replace('\n', '<br>')
-        return render_str("post.html", p=self, comments=comments)
+#     def render(self):
+#         comments = Comment.all().ancestor(self).order("created").fetch(10)
+#         self._render_text = self.content.replace('\n', '<br>')
+#         return render_str("post.html", p=self, comments=comments)
 
 
+### Model refactoring to Comment.py
 # Handles how each comment is displayed.
-class Comment(db.Model):
-    title = db.StringProperty(required=True)
-    content = db.TextProperty(required=True)
-    created_by = db.StringProperty(required=False)
-    created = db.DateTimeProperty(auto_now_add=True)
-    last_modified = db.DateTimeProperty(auto_now=True)
+# class Comment(db.Model):
+#     title = db.StringProperty(required=True)
+#     content = db.TextProperty(required=True)
+#     created_by = db.StringProperty(required=False)
+#     created = db.DateTimeProperty(auto_now_add=True)
+#     last_modified = db.DateTimeProperty(auto_now=True)
 
-    def render(self):
-        self._render_text = self.content.replace('\n', '<br>')
-        return render_str("comment.html", p=self)
+#     def render(self):
+#         self._render_text = self.content.replace('\n', '<br>')
+#         return render_str("comment.html", p=self)
 
 
 # Handles the home page of the blog, which is the "/blog" url.
