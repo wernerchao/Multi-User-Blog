@@ -6,3 +6,7 @@ from LoginLougoutHandler import LoginHandler, LogoutHandler
 from BlogHandler import BlogHandler
 from PostPageHandler import PostPageHandler
 from NewPostHandler import NewPostHandler
+from DeletePostHandler import DeletePostHandler
+from EditPostHandler import EditPostHandler
+from LikePostHandler import LikePostHandler
+from CommentPostHandler import CommentPostHandler

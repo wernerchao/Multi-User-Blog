@@ -8,124 +8,16 @@ import time
 from google.appengine.ext import db
 
 ### Model Refactoring
-from models import User
-from models import Post
-from models import Comment
+from models import User, Post, Comment
 
 ### Handler Refactoring
 from handlers import Handler
-from handlers import MainPage
-from handlers import SignUpHandler
-from handlers import Register
+from handlers import MainPage, BlogHandler
+from handlers import SignUpHandler, Register
 from handlers import LoginHandler, LogoutHandler
-from handlers import BlogHandler
-from handlers import PostPageHandler
-from handlers import NewPostHandler
-
-
-# Handles the delete button click to delete the specific post.
-class DeletePostHandler(Handler):
-    def post(self):
-        key = self.request.get("key")
-        item = db.get(key)
-        if key:
-            if self.user:
-                if item.created_by == self.user.name:
-                    db.delete(item)
-                    self.render('deletepost.html', post=item)
-                else:
-                    self.render('deletepost.html', post=item)
-            else:
-                return self.redirect('/signup')
-        else:
-            self.render('deletepost.html', post=item)
-
-
-# Handles the edit button click to edit the specific post.
-class EditPostHandler(Handler):
-    def get(self):
-        key = self.request.get("key")
-        item = db.get(key)
-        if key:
-            if self.user:
-                if item.created_by == self.user.name:
-                    self.render("editpost.html",
-                                title=item.title,
-                                content=item.content,
-                                key=key,
-                                created_by=item.created_by)
-                else:
-                    self.render('editpost.html', post=item)
-            else:
-                self.redirect('/signup')
-        else:
-            self.response.out.write("Your post doesn't exist!'")
-
-    def post(self):
-        title = self.request.get("title")
-        content = self.request.get("content")
-
-        key = self.request.get("key")
-        item = db.get(key)
-        if key:
-            if title and content:
-                item.title = title
-                item.content = content
-                item.put()
-                time.sleep(0.1)
-                return self.redirect('/blog')
-            else:
-                error = "We need both title and content"
-        else:
-            self.response.out.write("Your post doesn't exist!")
-
-# Handles the like+1 button click.
-class LikePostHandler(Handler):
-    def post(self):
-        key = self.request.get("key")
-        item = db.get(key)
-        liked_dict = {x: x for x in item.liked_by}
-        if key:
-            if self.user:
-                exist = self.user.name in liked_dict.keys()
-                if exist: # Check if the user already liked the post OR the user is the post owner
-                    self.response.out.write(
-                        "You don't have permission to like this post")
-                else:
-                    item.liked_by.append(self.user.name)
-                    item.likes += 1
-                    item.put()
-                    time.sleep(0.1)
-                    return self.redirect('/blog')
-            else:
-                return self.redirect('/signup')
-        else:
-            self.response.out.write("Your post doesn't exist!")
-
-
-# Handles the comment input on each post.
-class CommentPostHandler(Handler):
-    def post(self):
-        comment = self.request.get("comment")
-        key = self.request.get("key")
-        item = db.get(key)
-
-        if key:
-            if self.user:
-                if comment:
-                    p = Comment(parent=item.key(),
-                                title='none',
-                                content=comment,
-                                created_by=self.user.name)
-                    p.put()
-                    return self.redirect('/blog')
-                else:
-                    return self.response.out.write(
-                        "You can't submit an empty comment")
-            else:
-                return self.redirect('/signup')
-        else:
-            self.response.out.write('Your post does not exist!')
+from handlers import PostPageHandler, NewPostHandler
+from handlers import DeletePostHandler, EditPostHandler
+from handlers import LikePostHandler, CommentPostHandler
 
 
 app = webapp2.WSGIApplication([
@@ -441,3 +333,112 @@ app = webapp2.WSGIApplication([
 #             # self.response.out.write("You need to login!")
 #             self.render('signup.html', error_general="Please signup or login")
 
+
+### Refactoring to DeletePostHandler.py
+# Handles the delete button click to delete the specific post.
+# class DeletePostHandler(Handler):
+#     def post(self):
+#         key = self.request.get("key")
+#         item = db.get(key)
+#         if key:
+#             if self.user:
+#                 if item.created_by == self.user.name:
+#                     db.delete(item)
+#                     self.render('deletepost.html', post=item)
+#                 else:
+#                     self.render('deletepost.html', post=item)
+#             else:
+#                 return self.redirect('/signup')
+#         else:
+#             self.render('deletepost.html', post=item)
+
+
+### Refactoring to EditPostHandler
+# Handles the edit button click to edit the specific post.
+# class EditPostHandler(Handler):
+#     def get(self):
+#         key = self.request.get("key")
+#         item = db.get(key)
+#         if key:
+#             if self.user:
+#                 if item.created_by == self.user.name:
+#                     self.render("editpost.html",
+#                                 title=item.title,
+#                                 content=item.content,
+#                                 key=key,
+#                                 created_by=item.created_by)
+#                 else:
+#                     self.render('editpost.html', post=item)
+#             else:
+#                 self.redirect('/signup')
+#         else:
+#             self.response.out.write("Your post doesn't exist!'")
+
+#     def post(self):
+#         title = self.request.get("title")
+#         content = self.request.get("content")
+
+#         key = self.request.get("key")
+#         item = db.get(key)
+#         if key:
+#             if title and content:
+#                 item.title = title
+#                 item.content = content
+#                 item.put()
+#                 time.sleep(0.1)
+#                 return self.redirect('/blog')
+#             else:
+#                 error = "We need both title and content"
+#         else:
+#             self.response.out.write("Your post doesn't exist!")
+
+
+### Refactoring to LikePostHandler.py
+# Handles the like+1 button click.
+# class LikePostHandler(Handler):
+#     def post(self):
+#         key = self.request.get("key")
+#         item = db.get(key)
+#         liked_dict = {x: x for x in item.liked_by}
+#         if key:
+#             if self.user:
+#                 exist = self.user.name in liked_dict.keys()
+#                 if exist: # Check if the user already liked the post OR the user is the post owner
+#                     self.response.out.write(
+#                         "You don't have permission to like this post")
+#                 else:
+#                     item.liked_by.append(self.user.name)
+#                     item.likes += 1
+#                     item.put()
+#                     time.sleep(0.1)
+#                     return self.redirect('/blog')
+#             else:
+#                 return self.redirect('/signup')
+#         else:
+#             self.response.out.write("Your post doesn't exist!")
+
+
+### Refactoring to CommentPostHandler.py
+# Handles the comment input on each post.
+# class CommentPostHandler(Handler):
+#     def post(self):
+#         comment = self.request.get("comment")
+#         key = self.request.get("key")
+#         item = db.get(key)
+
+#         if key:
+#             if self.user:
+#                 if comment:
+#                     p = Comment(parent=item.key(),
+#                                 title='none',
+#                                 content=comment,
+#                                 created_by=self.user.name)
+#                     p.put()
+#                     return self.redirect('/blog')
+#                 else:
+#                     return self.response.out.write(
+#                         "You can't submit an empty comment")
+#             else:
+#                 return self.redirect('/signup')
+#         else:
+#             self.response.out.write('Your post does not exist!')
