@@ -1,23 +1,16 @@
-import os
-import jinja2
 import webapp2
-import re
-# import hmac
-import time
 
-from google.appengine.ext import db
-
-### Model Refactoring
+# Model Refactoring
 from models import User, Post, Comment
 
-### Handler Refactoring
-from handlers import Handler
-from handlers import MainPage, BlogHandler
-from handlers import SignUpHandler, Register
-from handlers import LoginHandler, LogoutHandler
-from handlers import PostPageHandler, NewPostHandler
-from handlers import DeletePostHandler, EditPostHandler
-from handlers import LikePostHandler, CommentPostHandler
+# Handler Refactoring
+from handlers import MainPage, BlogHandler # Handles the main page (/) and blog page (/blog)
+from handlers import SignUpHandler, Register # Handles the SignUp page (/signup) and Register class checks if the user exists or not
+from handlers import LoginHandler, LogoutHandler # Handles the Login (/login) and Logout (/logout) page
+from handlers import NewPostHandler, PostPageHandler # NewPostHandler handles the form to take in new input post (/blog/newpost).
+# PostPageHandler handles the newpost that the user just submitted, and displays it.
+from handlers import DeletePostHandler, EditPostHandler, LikePostHandler, CommentPostHandler
+# Handles (/blog/deletepost), (/blog/editpost), (/blog/likepost), and (/blog/commentpost) respectively.
 
 
 app = webapp2.WSGIApplication([
