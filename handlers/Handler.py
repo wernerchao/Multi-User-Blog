@@ -11,6 +11,7 @@ template_dir = os.path.join(os.path.dirname(__file__), 'handler-templates')
 jinja_env = jinja2.Environment(
     loader=jinja2.FileSystemLoader(template_dir), autoescape=True)
 
+
 # Doing hashing using hmac to hash the input value.
 def hash_str(s):
     return hmac.new(SECRET, s).hexdigest()
@@ -27,7 +28,11 @@ def check_secure_val(h):
     else:
         None
 
+
 class Handler(webapp2.RequestHandler):
+    """ This is the main handler that forms
+    the basis of all other handlers. """
+
     def render_str(self, template, **params):
         params['user'] = self.user
         return jinja_env.get_template(template).render(**params)
@@ -55,4 +60,6 @@ class Handler(webapp2.RequestHandler):
     def initialize(self, *a, **kw):
         webapp2.RequestHandler.initialize(self, *a, **kw)
         uid = self.read_secure_cookie('user_id')
+
+        # This allows us to check if the user is logged in or not.
         self.user = uid and User.by_id(int(uid))

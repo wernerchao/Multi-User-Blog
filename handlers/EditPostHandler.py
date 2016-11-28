@@ -2,13 +2,17 @@ import time
 from handlers import Handler
 from google.appengine.ext import db
 
-# Handles the edit button click to edit the specific post.
+
 class EditPostHandler(Handler):
+    """ Handles the edit button click
+    to edit the specific post/comment.
+    Only the post/comment owner can edit the post/comment. """
+
     def get(self):
         key = self.request.get("key")
         item = db.get(key)
-        if key:
-            if self.user:
+        if key:  # Checks if the post exists in the database or not.
+            if self.user:  # Checks if the user is logged in or not.
                 if item.created_by == self.user.name:
                     self.render("editpost.html",
                                 title=item.title,
@@ -28,7 +32,7 @@ class EditPostHandler(Handler):
 
         key = self.request.get("key")
         item = db.get(key)
-        if key:
+        if key:  # Checks if the post exists in the database.
             if title and content:
                 item.title = title
                 item.content = content

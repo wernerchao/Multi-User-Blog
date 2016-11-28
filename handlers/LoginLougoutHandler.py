@@ -2,6 +2,8 @@ from models import User
 from handlers import Handler
 
 class LoginHandler(Handler):
+    """ Handles the login page (/login). """
+
     def get(self):
         self.render('login-form.html')
 
@@ -19,6 +21,8 @@ class LoginHandler(Handler):
 
 
 class LogoutHandler(Handler):
+    """ Handles the logout page (/logout). """
+
     def get(self):
         self.logout()
         self.redirect('/blog')

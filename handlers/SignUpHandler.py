@@ -8,9 +8,10 @@ PASSWORD_RE = re.compile(r"^.{3,20}$")
 EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
 
 
-# Signup, login, and logout stuff starts here.
-# Basic signup handler to be used/extended by register.
 class SignUpHandler(Handler):
+    """ Basic signup handler to be used/extended by register.
+    Checks if the input username, password and email are valid. """
+
     def valid_username(self, username):
         return username and USER_RE.match(username)
 
@@ -55,7 +56,10 @@ class SignUpHandler(Handler):
     def done(self, *a, **kw):
         raise NotImplementedError
 
+
 class Register(SignUpHandler):
+    """ Checks if the user already exist or not. And sets the cookie. """
+
     def done(self):
         # Make sure the user doesn't already exist.
         u = User.by_name(self.username)

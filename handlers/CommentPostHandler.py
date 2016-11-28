@@ -3,16 +3,23 @@ from google.appengine.ext import db
 
 from models import Comment
 
-# Handles the comment input on each post.
+
 class CommentPostHandler(Handler):
+    """ Handles the comment input on each post.
+    Uses the same edit/delete functionalities as the Post model."""
+
     def post(self):
         comment = self.request.get("comment")
         key = self.request.get("key")
         item = db.get(key)
 
-        if key:
-            if self.user:
+        if key:  # Checks if the post exists in the database or not.
+            if self.user:  # Checks if the user is logged in or not.
                 if comment:
+
+                    # Use the Comment model (comment.html),
+                    # which uses the same edit/delete functionalities
+                    # as Post model (post.html)
                     p = Comment(parent=item.key(),
                                 title='none',
                                 content=comment,
