@@ -3,7 +3,7 @@ from handlers import Handler
 from google.appengine.ext import db
 
 
-class EditPostHandler(Handler):
+class EditPostCommentHandler(Handler):
     """ Handles the edit button click
     to edit the specific post/comment.
     Only the post/comment owner can edit the post/comment. """
@@ -33,13 +33,17 @@ class EditPostHandler(Handler):
         key = self.request.get("key")
         item = db.get(key)
         if key:  # Checks if the post exists in the database.
-            if title and content:
-                item.title = title
-                item.content = content
-                item.put()
-                time.sleep(0.1)
-                return self.redirect('/blog')
+            # Checks if the user is logged in and the user is the post owner
+            if self.user and item.created_by == self.user.name:
+                if title and content:
+                    item.title = title
+                    item.content = content
+                    item.put()
+                    time.sleep(0.1)
+                    return self.redirect('/blog')
+                else:
+                    error = "We need both title and content"
             else:
-                error = "We need both title and content"
+                self.response.out.write("You don't have permission to edit'")
         else:
             self.response.out.write("Your post doesn't exist!")

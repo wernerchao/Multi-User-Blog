@@ -7,6 +7,6 @@ from BlogHandler import BlogHandler
 from PostPageHandler import PostPageHandler
 from NewPostHandler import NewPostHandler
 from DeletePostHandler import DeletePostHandler
-from EditPostHandler import EditPostHandler
+from EditPostCommentHandler import EditPostCommentHandler
 from LikePostHandler import LikePostHandler
 from CommentPostHandler import CommentPostHandler

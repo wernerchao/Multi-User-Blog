@@ -8,7 +8,7 @@ from handlers import MainPage, BlogHandler
 from handlers import SignUpHandler, Register
 from handlers import LoginHandler, LogoutHandler
 from handlers import NewPostHandler, PostPageHandler
-from handlers import DeletePostHandler, EditPostHandler
+from handlers import DeletePostHandler, EditPostCommentHandler
 from handlers import LikePostHandler, CommentPostHandler
 
 
@@ -20,7 +20,7 @@ app = webapp2.WSGIApplication([
                                 ('/blog/?', BlogHandler),
                                 ('/blog/([0-9]+)', PostPageHandler),
                                 ('/blog/newpost', NewPostHandler),
-                                ('/blog/editpost', EditPostHandler),
+                                ('/blog/editpost', EditPostCommentHandler),
                                 ('/blog/deletepost', DeletePostHandler),
                                 ('/blog/likepost', LikePostHandler),
                                 ('/blog/commentpost', CommentPostHandler)
